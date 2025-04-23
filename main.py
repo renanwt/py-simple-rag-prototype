@@ -27,9 +27,7 @@ def load_data(filepaths: List[str]) -> pd.DataFrame:
             if 'text' not in df.columns:
                 print(f"Warning: CSV '{filepath}' is missing 'text' column. Skipping.")
                 continue
-            # Handle potential missing values
             df['text'] = df['text'].fillna('')
-            # Optional: Add source file info if needed later
             df['source_file'] = os.path.basename(filepath)
             all_dfs.append(df)
             print(f" - Loaded {len(df)} rows from {filepath}")
@@ -64,7 +62,7 @@ def find_relevant_context(query: str, corpus_embeddings, corpus: list[str], mode
     cos_scores = util.pytorch_cos_sim(query_embedding, corpus_embeddings)[0]
     cos_scores = cos_scores.cpu().numpy()
 
-    top_indices = np.argsort(cos_scores)[-top_k:][::-1] # Sort descending, take top k
+    top_indices = np.argsort(cos_scores)[-top_k:][::-1]
 
     relevant_indices = [idx for idx in top_indices if cos_scores[idx] >= threshold]
 
@@ -175,17 +173,17 @@ def main():
         if not user_question:
             continue
 
-        # 1. Retrieval (based on current question only)
+        # 1. Retrieval
         retrieved_context = find_relevant_context(
             user_question,
             corpus_embeddings,
             corpus,
             embedding_model,
             top_k=TOP_K,
-            threshold=SIMILARITY_THRESHOLD # Pass threshold here
+            threshold=SIMILARITY_THRESHOLD
         )
 
-        # 2. Generation (with context and history)
+        # 2. Generation
         history_for_prompt = conversation_history[-MAX_HISTORY_TURNS:]
 
         llm_answer = ask_llm(
