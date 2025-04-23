@@ -19,7 +19,7 @@ This project demonstrates a basic Retrieval-Augmented Generation (RAG) system. I
 
 1.  **Clone the Repository:**
     ```bash
-    git clone https://github.com/renanwt/simple-rag-prototype.git # Replace your_username
+    git clone https://github.com/renanwt/simple-rag-prototype.git
     cd simple-rag-prototype
     ```
 

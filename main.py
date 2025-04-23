@@ -24,7 +24,6 @@ def load_data(filepaths: List[str]) -> pd.DataFrame:
     for filepath in filepaths:
         try:
             df = pd.read_csv(filepath)
-            # Ensure 'text' column exists
             if 'text' not in df.columns:
                 print(f"Warning: CSV '{filepath}' is missing 'text' column. Skipping.")
                 continue
@@ -67,16 +66,14 @@ def find_relevant_context(query: str, corpus_embeddings, corpus: list[str], mode
 
     top_indices = np.argsort(cos_scores)[-top_k:][::-1] # Sort descending, take top k
 
-    # Filter by threshold
     relevant_indices = [idx for idx in top_indices if cos_scores[idx] >= threshold]
 
     if not relevant_indices:
         print(f"No context found above similarity threshold {threshold}")
         return ""
 
-    # Retrieve the actual text snippets
     context_snippets = [corpus[idx] for idx in relevant_indices]
-    context = "\n---\n".join(context_snippets) # Separate snippets clearly
+    context = "\n---\n".join(context_snippets)
 
     # print(f"\n--- Retrieved Context (Top {len(relevant_indices)} Snippets, Threshold={threshold}) ---")
     # print("...") 
@@ -97,9 +94,9 @@ def ask_llm(context: str, question: str, model_name: str, api_key: str, history:
 
     history_string = format_history(history) if history else ""
 
-    if not context and not history_string: # If no context and no history, cannot answer
+    if not context and not history_string:
          return "I have no context or conversation history to answer this question."
-    elif not context: # If history exists but no *new* context found for *this* question
+    elif not context:
         prompt = f"""{history_string}
 
                 Answer the following question based on the previous conversation turns. If the previous turns do not contain the answer, say "I cannot answer this question based on the previous conversation or the documents I have access to."
@@ -129,7 +126,7 @@ def ask_llm(context: str, question: str, model_name: str, api_key: str, history:
     try:
         chat = ChatGoogleGenerativeAI(
             model=model_name,
-            temperature=0.1, # Lower temperature for fact-based generation
+            temperature=0.1,
             google_api_key=api_key
         )
 
@@ -154,11 +151,9 @@ def main():
         print("Error: GOOGLE_API_KEY not found. Please set it in the .env file.")
         exit(1)
 
-    # Load data from multiple sources
     dataframe = load_data(DATA_FILEPATHS)
     corpus = dataframe['text'].tolist()
 
-    # Load Embedding Model
     try:
         embedding_model = SentenceTransformer(EMBEDDING_MODEL)
     except Exception as e:
@@ -166,13 +161,11 @@ def main():
         print("Ensure you have internet connectivity for the first download.")
         exit(1)
 
-    # Pre-compute Corpus Embeddings
     corpus_embeddings = create_embeddings(corpus, embedding_model)
 
     print("\n--- Simple RAG CLI ---")
     print("Ask a question about local taxes or city services. Type 'quit' or 'exit' to stop.")
 
-    # Initialize conversation history
     conversation_history: List[Tuple[str, str]] = []
 
     while True:
